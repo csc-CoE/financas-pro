@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comprovantes – FinançasPRO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">FinançasPRO</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="nav-item"><span class="nav-icon">▦</span> Dashboard</a>
+      <a href="transacoes.html" class="nav-item"><span class="nav-icon">⇅</span> Transações</a>
+      <a href="comprovantes.html" class="nav-item active"><span class="nav-icon">◧</span> Comprovantes</a>
+      <a href="contas.html" class="nav-item"><span class="nav-icon">▣</span> Contas</a>
+      <a href="chatbot.html" class="nav-item"><span class="nav-icon">◎</span> Consultor IA</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="month-selector">
+        <button id="prevMonth" class="month-btn">‹</button>
+        <span id="currentMonthLabel">Mai 2026</span>
+        <button id="nextMonth" class="month-btn">›</button>
+      </div>
+    </div>
+  </aside>
+
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger">☰</button>
+    <span class="logo-text">FinançasPRO</span>
+    <span></span>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Comprovantes</h1>
+        <p class="page-subtitle">Armazene comprovantes de PIX e transferências</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept="image/*,application/pdf" multiple>
+        <div class="upload-icon">📎</div>
+        <div class="upload-label">
+          <strong>Clique para anexar</strong> ou arraste os comprovantes aqui
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:8px">PNG, JPG, PDF até 5MB</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Comprovantes Salvos</h2>
+        <div class="search-box" style="max-width:220px">
+          <span>🔍</span>
+          <input type="text" id="searchComp" placeholder="Buscar...">
+        </div>
+      </div>
+      <div id="compGrid" class="comprovantes-grid"></div>
+    </div>
+  </main>
+
+  <!-- Image Viewer Modal -->
+  <div class="modal-overlay" id="viewerModal">
+    <div class="modal" style="max-width:700px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <h2 class="modal-title" id="viewerTitle" style="margin:0">Comprovante</h2>
+        <button onclick="closeViewer()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer">✕</button>
+      </div>
+      <div id="viewerContent" style="text-align:center"></div>
+      <div style="display:flex;gap:10px;justify-content:space-between;margin-top:20px">
+        <div id="viewerMeta" style="font-size:13px;color:var(--text2)"></div>
+        <button class="btn-danger" id="btnDeleteComp">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/storage.js"></script>
+  <script>
+    let currentViewerId = null;
+    let allComp = [];
+
+    function renderGrid(filter = '') {
+      allComp = DB.getComprovantes();
+      const filtered = filter ? allComp.filter(c => c.name.toLowerCase().includes(filter.toLowerCase())) : allComp;
+      const grid = document.getElementById('compGrid');
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">Nenhum comprovante encontrado.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(c => {
+        const isPdf = c.type === 'application/pdf';
+        const thumb = isPdf
+          ? `<div style="width:100%;aspect-ratio:4/3;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:40px">📄</div>`
+          : `<img src="${c.data}" alt="${c.name}" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block">`;
+        const date = new Date(c.createdAt).toLocaleDateString('pt-BR');
+
+        return `
+          <div class="comprovante-card" onclick="openViewer('${c.id}')">
+            ${thumb}
+            <div class="comprovante-info">
+              <div class="comprovante-name">${c.name}</div>
+              <div class="comprovante-date">${date}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function openViewer(id) {
+      const comp = allComp.find(c => c.id === id);
+      if (!comp) return;
+      currentViewerId = id;
+
+      document.getElementById('viewerTitle').textContent = comp.name;
+      document.getElementById('viewerMeta').textContent = `Adicionado em ${new Date(comp.createdAt).toLocaleDateString('pt-BR')} · ${Math.round(comp.size / 1024)} KB`;
+
+      const content = document.getElementById('viewerContent');
+      if (comp.type === 'application/pdf') {
+        content.innerHTML = `<embed src="${comp.data}" type="application/pdf" width="100%" height="400px">`;
+      } else {
+        content.innerHTML = `<img src="${comp.data}" alt="${comp.name}" style="max-width:100%;border-radius:8px;max-height:500px">`;
+      }
+
+      document.getElementById('viewerModal').classList.add('open');
+    }
+
+    function closeViewer() {
+      document.getElementById('viewerModal').classList.remove('open');
+      currentViewerId = null;
+    }
+
+    document.getElementById('btnDeleteComp').addEventListener('click', () => {
+      if (!currentViewerId) return;
+      if (!confirm('Excluir este comprovante?')) return;
+      DB.deleteComprovante(currentViewerId);
+      closeViewer();
+      renderGrid();
+      toast('Comprovante excluído.', 'info');
+    });
+
+    document.getElementById('viewerModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeViewer();
+    });
+
+    // File upload
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          toast(`${file.name} é muito grande (máx 5MB)`, 'error');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = ev => {
+          DB.addComprovante({ name: file.name, type: file.type, size: file.size, data: ev.target.result });
+          renderGrid();
+          toast(`${file.name} salvo!`, 'success');
+        };
+        reader.readAsDataURL(file);
+      });
+      fileInput.value = '';
+    }
+
+    document.getElementById('searchComp').addEventListener('input', e => renderGrid(e.target.value));
+
+    document.addEventListener('DOMContentLoaded', renderGrid);
+  </script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Transações – FinançasPRO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">FinançasPRO</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="nav-item">
+        <span class="nav-icon">▦</span> Dashboard
+      </a>
+      <a href="transacoes.html" class="nav-item active">
+        <span class="nav-icon">⇅</span> Transações
+      </a>
+      <a href="comprovantes.html" class="nav-item">
+        <span class="nav-icon">◧</span> Comprovantes
+      </a>
+      <a href="contas.html" class="nav-item">
+        <span class="nav-icon">▣</span> Contas
+      </a>
+      <a href="chatbot.html" class="nav-item">
+        <span class="nav-icon">◎</span> Consultor IA
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="month-selector">
+        <button id="prevMonth" class="month-btn">‹</button>
+        <span id="currentMonthLabel">Mai 2026</span>
+        <button id="nextMonth" class="month-btn">›</button>
+      </div>
+    </div>
+  </aside>
+
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger">☰</button>
+    <span class="logo-text">FinançasPRO</span>
+    <span></span>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Transações</h1>
+        <p class="page-subtitle" id="txSubtitle"></p>
+      </div>
+      <button class="btn-primary" id="btnNovaTransacao">+ Nova Transação</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="search-box" style="flex:1;min-width:200px;max-width:300px">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar transação...">
+      </div>
+      <button class="filter-chip active" data-filter="todos">Todos</button>
+      <button class="filter-chip" data-filter="entrada">Entradas</button>
+      <button class="filter-chip" data-filter="saida">Saídas</button>
+    </div>
+
+    <div class="card" style="padding:0">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Conta</th>
+              <th>Data</th>
+              <th>Valor</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="txTable">
+            <tr><td colspan="7"><div class="empty-state">Nenhuma transação encontrada.</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Nova / Editar Transação -->
+  <div class="modal-overlay" id="txModal">
+    <div class="modal">
+      <h2 class="modal-title" id="modalTitle">Nova Transação</h2>
+
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <div class="tipo-switch">
+          <button class="tipo-btn active entrada" data-tipo="entrada" id="btnEntrada">↓ Entrada</button>
+          <button class="tipo-btn saida" data-tipo="saida" id="btnSaida">↑ Saída</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor</label>
+          <input type="number" class="form-input" id="txValor" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="date" class="form-input" id="txData">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input type="text" class="form-input" id="txDescricao" placeholder="Ex: Mercado, Salário...">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select class="form-select" id="txCategoria"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Conta</label>
+          <select class="form-select" id="txConta">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observação</label>
+        <textarea class="form-textarea" id="txObs" placeholder="Opcional..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnCancelar">Cancelar</button>
+        <button class="btn-primary" id="btnSalvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/storage.js"></script>
+  <script>
+    let editId = null;
+    let currentTipo = 'entrada';
+    let currentFilter = 'todos';
+    let searchQuery = '';
+
+    function fillCategorias(tipo) {
+      const sel = document.getElementById('txCategoria');
+      sel.innerHTML = CATEGORIAS.filter(c => c.tipo === tipo)
+        .map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+    }
+
+    function fillContas() {
+      const sel = document.getElementById('txConta');
+      const contas = DB.getContas();
+      sel.innerHTML = '<option value="">Sem conta específica</option>' +
+        contas.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    }
+
+    function openModal(tx = null) {
+      editId = tx ? tx.id : null;
+      document.getElementById('modalTitle').textContent = tx ? 'Editar Transação' : 'Nova Transação';
+      
+      currentTipo = tx ? tx.tipo : 'entrada';
+      updateTipoUI(currentTipo);
+      fillCategorias(currentTipo);
+      fillContas();
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('txValor').value = tx ? tx.valor : '';
+      document.getElementById('txData').value = tx ? tx.data : today;
+      document.getElementById('txDescricao').value = tx ? tx.descricao : '';
+      document.getElementById('txCategoria').value = tx ? tx.categoria : '';
+      document.getElementById('txConta').value = tx ? (tx.conta || '') : '';
+      document.getElementById('txObs').value = tx ? (tx.obs || '') : '';
+
+      document.getElementById('txModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('txModal').classList.remove('open');
+      editId = null;
+    }
+
+    function updateTipoUI(tipo) {
+      currentTipo = tipo;
+      document.querySelectorAll('.tipo-btn').forEach(b => {
+        b.classList.remove('active');
+        if (b.dataset.tipo === tipo) b.classList.add('active');
+      });
+    }
+
+    function renderTable() {
+      const { year, month } = DB.getCurrentMonth();
+      let txs = DB.getTransacoesByMonth(year, month);
+
+      if (currentFilter !== 'todos') txs = txs.filter(t => t.tipo === currentFilter);
+      if (searchQuery) txs = txs.filter(t =>
+        t.descricao.toLowerCase().includes(searchQuery) ||
+        getCatLabel(t.categoria).toLowerCase().includes(searchQuery)
+      );
+
+      const subtitle = document.getElementById('txSubtitle');
+      if (subtitle) subtitle.textContent = `${MESES[month]} de ${year} · ${txs.length} transação(ões)`;
+
+      const tbody = document.getElementById('txTable');
+      if (txs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">Nenhuma transação neste mês. <button onclick="openModal()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px">Adicionar</button></div></td></tr>`;
+        return;
+      }
+
+      const contas = DB.getContas();
+      tbody.innerHTML = txs.map(t => {
+        const conta = contas.find(c => c.id === t.conta);
+        return `
+          <tr>
+            <td><span class="badge ${t.tipo}">${t.tipo === 'entrada' ? '↓ Entrada' : '↑ Saída'}</span></td>
+            <td>${t.descricao}${t.obs ? `<br><span style="color:var(--text3);font-size:12px">${t.obs}</span>` : ''}</td>
+            <td>${getCatLabel(t.categoria)}</td>
+            <td style="color:var(--text2)">${conta ? conta.nome : '—'}</td>
+            <td style="color:var(--text2)">${formatDate(t.data)}</td>
+            <td class="${t.tipo === 'saida' ? 'tx-valor saida' : 'tx-valor entrada'}" style="font-family:'Syne',sans-serif;font-weight:700">
+              ${t.tipo === 'saida' ? '-' : '+'}${formatCurrency(t.valor)}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px">
+                <button onclick="openModal(${JSON.stringify(t).split('"').join('&quot;')})" class="btn-secondary" style="padding:5px 12px;font-size:12px">✎</button>
+                <button onclick="deleteTx('${t.id}')" class="btn-danger" style="padding:5px 12px;font-size:12px">✕</button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function deleteTx(id) {
+      if (!confirm('Excluir esta transação?')) return;
+      DB.deleteTransacao(id);
+      renderTable();
+      toast('Transação excluída.', 'info');
+    }
+
+    function onMonthChange() { renderTable(); }
+
+    // Events
+    document.getElementById('btnNovaTransacao').addEventListener('click', () => openModal());
+    document.getElementById('btnCancelar').addEventListener('click', closeModal);
+    document.getElementById('txModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+    document.querySelectorAll('.tipo-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        updateTipoUI(btn.dataset.tipo);
+        fillCategorias(btn.dataset.tipo);
+      });
+    });
+
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filter;
+        renderTable();
+      });
+    });
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+      searchQuery = e.target.value.toLowerCase();
+      renderTable();
+    });
+
+    document.getElementById('btnSalvar').addEventListener('click', () => {
+      const valor = parseFloat(document.getElementById('txValor').value);
+      const descricao = document.getElementById('txDescricao').value.trim();
+      const data = document.getElementById('txData').value;
+      const categoria = document.getElementById('txCategoria').value;
+
+      if (!valor || valor <= 0) return toast('Informe um valor válido.', 'error');
+      if (!descricao) return toast('Informe uma descrição.', 'error');
+      if (!data) return toast('Informe uma data.', 'error');
+
+      const tx = {
+        tipo: currentTipo,
+        valor,
+        descricao,
+        data,
+        categoria,
+        conta: document.getElementById('txConta').value,
+        obs: document.getElementById('txObs').value.trim(),
+      };
+
+      if (editId) {
+        DB.updateTransacao(editId, tx);
+        toast('Transação atualizada!', 'success');
+      } else {
+        DB.addTransacao(tx);
+        toast('Transação salva!', 'success');
+      }
+
+      closeModal();
+      renderTable();
+    });
+
+    // Open modal if URL has ?new=1
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(() => openModal(), 300));
+    }
+
+    document.addEventListener('DOMContentLoaded', renderTable);
+  </script>
+</body>
+</html>

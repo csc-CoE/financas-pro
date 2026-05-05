@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FinançasPRO – Controle Financeiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">FinançasPRO</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">▦</span> Dashboard
+      </a>
+      <a href="pages/transacoes.html" class="nav-item" data-page="transacoes">
+        <span class="nav-icon">⇅</span> Transações
+      </a>
+      <a href="pages/comprovantes.html" class="nav-item" data-page="comprovantes">
+        <span class="nav-icon">◧</span> Comprovantes
+      </a>
+      <a href="pages/contas.html" class="nav-item" data-page="contas">
+        <span class="nav-icon">▣</span> Contas
+      </a>
+      <a href="pages/chatbot.html" class="nav-item" data-page="chatbot">
+        <span class="nav-icon">◎</span> Consultor IA
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="month-selector">
+        <button id="prevMonth" class="month-btn">‹</button>
+        <span id="currentMonthLabel">Mai 2026</span>
+        <button id="nextMonth" class="month-btn">›</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile header -->
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger">☰</button>
+    <span class="logo-text">FinançasPRO</span>
+    <span></span>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle" id="dashSubtitle">Maio de 2026</p>
+      </div>
+      <button class="btn-primary" onclick="window.location.href='pages/transacoes.html?new=1'">
+        + Nova Transação
+      </button>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-entrada">
+        <div class="kpi-label">Entradas</div>
+        <div class="kpi-value" id="totalEntradas">R$ 0,00</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill entrada-fill" style="width:0%"></div></div>
+      </div>
+      <div class="kpi-card kpi-saida">
+        <div class="kpi-label">Saídas</div>
+        <div class="kpi-value" id="totalSaidas">R$ 0,00</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill saida-fill" style="width:0%"></div></div>
+      </div>
+      <div class="kpi-card kpi-saldo">
+        <div class="kpi-label">Saldo do Mês</div>
+        <div class="kpi-value" id="saldoMes">R$ 0,00</div>
+        <div class="kpi-badge" id="saldoBadge">—</div>
+      </div>
+      <div class="kpi-card kpi-tx">
+        <div class="kpi-label">Transações</div>
+        <div class="kpi-value" id="totalTx">0</div>
+        <div class="kpi-badge neutral">neste mês</div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-row">
+      <div class="card chart-card">
+        <h2 class="card-title">Fluxo Mensal</h2>
+        <canvas id="fluxoChart" height="200"></canvas>
+      </div>
+      <div class="card chart-card chart-card-sm">
+        <h2 class="card-title">Por Categoria</h2>
+        <canvas id="catChart" height="200"></canvas>
+        <div id="catLegend" class="cat-legend"></div>
+      </div>
+    </div>
+
+    <!-- Recent transactions -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Últimas Transações</h2>
+        <a href="pages/transacoes.html" class="link-ver-mais">Ver todas →</a>
+      </div>
+      <div id="recentList" class="transaction-list">
+        <div class="empty-state">Nenhuma transação ainda. <a href="pages/transacoes.html?new=1">Adicionar</a></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
