@@ -4,9 +4,10 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Consultor IA – FinançasPRO</title>
+  <base href="/financas-pro/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -15,11 +16,11 @@
       <span class="logo-text">FinançasPRO</span>
     </div>
     <nav class="sidebar-nav">
-      <a href="../index.html" class="nav-item"><span class="nav-icon">▦</span> Dashboard</a>
-      <a href="transacoes.html" class="nav-item"><span class="nav-icon">⇅</span> Transações</a>
-      <a href="comprovantes.html" class="nav-item"><span class="nav-icon">◧</span> Comprovantes</a>
-      <a href="contas.html" class="nav-item"><span class="nav-icon">▣</span> Contas</a>
-      <a href="chatbot.html" class="nav-item active"><span class="nav-icon">◎</span> Consultor IA</a>
+      <a href="index.html" class="nav-item"><span class="nav-icon">▦</span> Dashboard</a>
+      <a href="pages/transacoes.html" class="nav-item"><span class="nav-icon">⇅</span> Transações</a>
+      <a href="pages/comprovantes.html" class="nav-item"><span class="nav-icon">◧</span> Comprovantes</a>
+      <a href="pages/contas.html" class="nav-item"><span class="nav-icon">▣</span> Contas</a>
+      <a href="pages/chatbot.html" class="nav-item active"><span class="nav-icon">◎</span> Consultor IA</a>
     </nav>
     <div class="sidebar-footer">
       <div class="month-selector">
@@ -105,7 +106,7 @@
     </div>
   </div>
 
-  <script src="../js/storage.js"></script>
+  <script src="js/storage.js"></script>
   <script>
     const API_KEY_STORAGE = 'fp_anthropic_key';
     let chatHistory = [];
